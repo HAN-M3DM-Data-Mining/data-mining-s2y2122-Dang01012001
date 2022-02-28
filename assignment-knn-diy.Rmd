@@ -1,9 +1,8 @@
 ---
-title: "Assigment - kNN DIY"
-author:
-  - name author here - Author
-  - name reviewer here - Reviewer
-date: "`r format(Sys.time(), '%d %B, %Y')`"
+title: "Assigment - kNN - dataset HCV"
+author: "Dang Nguyen" 
+#Author review: Kien Huynh
+date: "28/02/2022"
 output:
    html_notebook:
     toc: true
@@ -16,26 +15,97 @@ library(tidyverse)
 library(googlesheets4)
 library(class)
 library(caret)
+library(magrittr)
+library(plotly)
 ```
 
 ---
+## A. Business understanding
+The data set contains laboratory values of blood donors, Hepatitis C patients and their demographic values.
 
-Choose a suitable dataset from [this](https://github.com/HAN-M3DM-Data-Mining/assignments/tree/master/datasets) folder and train  your own kNN model. Follow all the steps from the CRISP-DM model.
+## B. Data Understanding
+```{r}
+url <- "https://raw.githubusercontent.com/HAN-M3DM-Data-Mining/assignments/master/datasets/KNN-hcvdat0.csv"
+rawDF <- read_csv(url, )
+str(rawDF)
+```
+
+## C. Data Preparation
+### 1. Data cleaning
+```{r}
+cleanDF <- na.omit(rawDF[-1])
+head(cleanDF)
+```
+
+### 2. Setting labels to category types (defined as either "Donor" or "Hepatitis")
+```{r}
+cleanDF$Category <- factor(cleanDF$Category)
+levels(cleanDF$Category) <- c("Donor", "Donor", "Hepatitis", "Hepatitis", "Hepatitis")
+levels(cleanDF$Category)
+table(cleanDF$Category)
+```
+### 3. Visualizing an inspection between ALB and ALP
+```{r}
+p1 <- ggplot(cleanDF) +
+  geom_point(aes(ALB, ALP, colour = Category))
+p1
+```
 
 
-## Business Understanding
-text and code here
+## D. Normalize numeric features
+### 1. Setting a function 
+```{r}
+normalize <- function(x) {
+  return ((x - min(x)) / (max(x) - min(x))) 
+}
+```
+### 2. Testing the function 
+```{r}
+testSet1 <- c(1:5)
+testSet2 <- c(1:5) * 10
 
-## Data Understanding
-text and code here
+cat("testSet1:", testSet1, "\n")
+cat("Normalized testSet1:", normalize(testSet1), "\n")
 
-## Data Preparation
-text and code here
+cat("testSet2:", testSet2, "\n")
+cat("Normalized testSet2:", normalize(testSet2), "\n")
+```
 
-## Modeling
-text and code here
 
-## Evaluation and Deployment
-text and code here
+```{r}
+nCols <- dim(cleanDF)[2]
+cleanDFnorm <- sapply(4:nCols,
+                    function(x) {
+  normalize(cleanDF[, x])
+}) %>% as.data.frame()
+
+head(cleanDFnorm)
+```
+
+## E.Preparing train and test datasets
+```{r}
+s <- sample(c(1:dim(cleanDF)[1]), 469)
+
+#Splitting training and test data sets
+trainDFfeat <- cleanDFnorm[s,  ]
+testDFfeat <- cleanDFnorm[-s,  ]
+
+#Creating training and test data sets with labels
+trainDFlabels <- cleanDF[s, 1]
+testDFlabels <- cleanDF[-s, 1]
+```
+
+
+## F. Modeling and Evaluation
+```{r}
+cleanDFpred <- knn(train = as.matrix(trainDFfeat), test = as.matrix(testDFfeat), cl = as.matrix(trainDFlabels), k = 7)
+head(cleanDFpred)
+confusionMatrix(cleanDFpred, testDFlabels[[1]], positive = NULL, dnn = c("Prediction", "True"))
+dim(cleanDFpred)
+dim(testDFlabels)
+```
+
+## G. Evaluation and Deployment
+k = 7 seems to provide the best accuracy in this example. Yet I do not know why after trying a few times.
 
 reviewer adds suggestions for improving the model
