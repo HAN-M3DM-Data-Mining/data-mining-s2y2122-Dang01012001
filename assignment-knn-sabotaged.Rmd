@@ -33,7 +33,7 @@ str(rawDF)
 ## C. Data Preparation
 ### 1. Data cleaning
 ```{r}
-cleanDF <- na.omit(rawDF[-1])
+cleanDF <- rawDF[-1]
 head(cleanDF)
 ```
 
@@ -84,17 +84,14 @@ head(cleanDFnorm)
 
 ## E.Preparing train and test datasets
 ```{r}
-s <- sample(c(1:dim(cleanDF)[1]), 469)
-
 #Splitting training and test data sets
-trainDFfeat <- cleanDFnorm[s,  ]
-testDFfeat <- cleanDFnorm[-s,  ]
+trainDF_feat <- cleanDFnorm [1:469,  ]
+testDF_feat <- cleanDFnorm [470:589,  ]
 
 #Creating training and test data sets with labels
-trainDFlabels <- cleanDF[s, 1]
-testDFlabels <- cleanDF[-s, 1]
+trainDF_feat <- cleanDFnorm [1:469,  ]
+testDF_feat <- cleanDFnorm [470:589,  ]
 ```
-
 
 ## F. Modeling and Evaluation
 ```{r}
